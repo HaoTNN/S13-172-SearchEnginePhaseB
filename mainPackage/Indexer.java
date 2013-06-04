@@ -3,6 +3,8 @@ package mainPackage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import org.jsoup.*;
+import org.jsoup.nodes.*;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -17,8 +19,29 @@ import org.apache.lucene.document.TextField;
 public class Indexer {	
 	static void index(String docFolder, String indexPath) {
 		
-		// TODO check if indexPath is available (writable? already existed? etc ... )	
-		// TODO check if docFolder is available (readable? exist? etc... )		
+		// TODO check if indexPath is available (writable? already existed? etc ... )
+		File indexPathFile = new File(indexPath);
+		if( !indexPathFile.exists() ){
+			if( indexPathFile.canWrite() ){
+				indexPathFile.mkdir();
+			}
+			else{
+				System.err.println("Error in index(String, String): Can't create directory");
+			}
+		}
+		
+		// TODO check if docFolder is available (readable? exist? etc... ) - DONE
+		File docFolderFile = new File(docFolder);
+		if( docFolderFile.exists() ){
+			if( !docFolderFile.canRead() ){
+				System.err.println("Error in index(String, String): Can't read from " + docFolder );
+			}
+		}
+		else{
+			System.err.println("Error in index(String, String): Directory " + docFolder + " doesn't exist.");
+		}
+		
+		
 		IndexWriter writer = null;
 		try {			
 			IndexWriterConfig indexConfig = new IndexWriterConfig(Version.LUCENE_43, 
@@ -67,13 +90,30 @@ public class Indexer {
 	}
 	
 	public static Document getDocument(File f) throws java.io.FileNotFoundException {
-		Document doc = new Document();
+		Document doc = new Document(); //NOTE: Document is from the Lucene library, whereas the 'Document' below is from Jsoup.
 		String content = "";
-		// TODO read content from File f.
-		// TODO get text part of the HTML file
+		
+		// TODO read content from File f. -DONE
+		org.jsoup.nodes.Document htmlDoc = null;
+		try{
+			htmlDoc = Jsoup.parse(f, "ISO-8859-1");
+		}
+		catch(Exception e){
+			System.err.println("Error in getDocument(): " + e.getMessage());
+		}
+		
+		// TODO get text part of the HTML file -DONE
+		content = htmlDoc.text();
 		
 		doc.add(new StringField("docid", f.getName(), Field.Store.YES) );
-		doc.add(new TextField("content", content, Field.Store.NO) );		
+		doc.add(new TextField("content", content, Field.Store.NO) );
+		
+		
+		
+		// TODO need to error check to see if we get the Lucene document we want.
+		
+		
+		
 		// TODO add the fields that your ranking strategy needs.
 		// TODO be careful, that you need to find back the doc to show ...		
 		return doc;
