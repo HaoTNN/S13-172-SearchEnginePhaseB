@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.jsoup.*;
-import org.jsoup.nodes.*;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -22,12 +21,7 @@ public class Indexer {
 		// TODO check if indexPath is available (writable? already existed? etc ... )
 		File indexPathFile = new File(indexPath);
 		if( !indexPathFile.exists() ){
-			if( indexPathFile.canWrite() ){
-				indexPathFile.mkdir();
-			}
-			else{
-				System.err.println("Error in index(String, String): Can't create directory");
-			}
+			indexPathFile.mkdir();
 		}
 		
 		// TODO check if docFolder is available (readable? exist? etc... ) - DONE
@@ -89,6 +83,9 @@ public class Indexer {
 		
 	}
 	
+	//public static Document get Document(File f) throws java.io.FileNotFoundException
+	//
+	//Creates and return a Lucene Document containing 
 	public static Document getDocument(File f) throws java.io.FileNotFoundException {
 		Document doc = new Document(); //NOTE: Document is from the Lucene library, whereas the 'Document' below is from Jsoup.
 		String content = "";
@@ -105,9 +102,19 @@ public class Indexer {
 		// TODO get text part of the HTML file -DONE
 		content = htmlDoc.text();
 		
-		doc.add(new StringField("docid", f.getName(), Field.Store.YES) );
-		doc.add(new TextField("content", content, Field.Store.NO) );
+		//Converting the html files' name back to normal URLs.
+		String fixedName = f.getName().replaceAll(",", "/");
+		fixedName = fixedName.replaceAll("\\[", ":");
+		fixedName = fixedName.replaceAll("]", "[?]");
+		fixedName = fixedName.substring(0, fixedName.length()-5);
+		System.out.println(fixedName);
 		
+		doc.add(new StringField("docid", fixedName, Field.Store.YES) );
+		
+		//Store.YES will store the text content of the whole web page.
+		//For now, we'll leave it at YES for debugging purposes.
+		//TODO: change to Store.NO when implementation is ready.
+		doc.add(new TextField("content", content, Field.Store.YES) );
 		
 		
 		// TODO need to error check to see if we get the Lucene document we want.
@@ -115,7 +122,9 @@ public class Indexer {
 		
 		
 		// TODO add the fields that your ranking strategy needs.
-		// TODO be careful, that you need to find back the doc to show ...		
+		// TODO be careful, that you need to find back the doc to show ...
+		// Maybe a field that points to location of the file?
+		
 		return doc;
 	}
 	

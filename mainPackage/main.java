@@ -2,51 +2,54 @@ package mainPackage;
 
 import java.util.*;
 import java.io.*;
-import org.jsoup.*;
-import org.jsoup.examples.*;
-import org.jsoup.nodes.*;
-import org.jsoup.safety.*;
-import org.jsoup.select.*;
+
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.Directory;
 
 public class main {
-	static public void main(String[] args){
-		String indexPath = "./testingIndexPath";
+	static public void main(String[] args) throws IOException, ParseException{
+		String indexPath = "testingIndexPath";
+		String docFolder = "htmlsWorkFrom";
 		
-		File htmlFile = new File("htmlsWorkFrom/http[,,www.cs.ucr.edu,~vagelis.html");
+		//1. Creating index 
+		Indexer index = new Indexer();
+		index.index(docFolder, indexPath);
 		
-		//Code block to get cleaned text from Document ( html)
-		/*
-		File htmlFile = new File("htmlsWorkFrom/http[,,www.cs.ucr.edu,~vagelis.html");
-		
-		
-		if( !htmlFile.exists()){
-			System.err.println("Something went wrong: htmlFile doesn't exist.");
-		}	
-		String charSet = "ISO-8859-1";
-		ArrayList<String> docText = new ArrayList<String>();
-		String innerHtml = "";
-		Document doc = null;
+		//2. Loading and prepping the index to get data from.
+		Directory indexDir = null;
 		try{
-			doc = Jsoup.parse(htmlFile,charSet);
+			indexDir = FSDirectory.open(new File(indexPath));
 		}
 		catch(Exception e){
-			System.err.println("Error in parsing: " + e.getMessage());
+			System.err.println("Error in main: " + e.getMessage());
 		}
 		
-		System.out.println(doc.text());
-		System.out.println(doc.text().length());
-		*/
+		IndexReader reader = null;
+		try{
+			reader = DirectoryReader.open(indexDir);
+		}
+		catch(Exception e){
+			System.err.println("Error in main: " + e.getMessage());
+		}
+		IndexSearcher indexSearcher = new IndexSearcher(reader);
 		
-		/*
-		HtmlToPlainText ht = new HtmlToPlainText();
-		innerHtml = ht.getPlainText(doc);
-		*/
-		
-		//doc = new Cleaner(Whitelist.simpleText()).clean(doc);
-		//innerHtml = Jsoup.parse( doc.body().toString().replaceAll("(?i)<br[^>]*>", "br2n") ).text();
-		//innerHtml = innerHtml.replaceAll("br2n", "\n");
-		
-		
-		//String docFolder;
+		//3. Searching for query.
+		String queryString = "Vagelis Hristidis";
+		Searcher searcher = new Searcher();
+				
+		//4. Grab results and display them
+		ScoreDoc[] docResults = searcher.doSearch(indexPath, queryString).scoreDocs;
+		System.out.println("Found " + docResults.length + " results.");
+		for( int i = 0; i < docResults.length; ++i ){
+			int docId = docResults[i].doc;
+			Document d = indexSearcher.doc(docId);
+			System.out.println((i+1) + ": " + d.get("docid") + "\t" + docResults[i].score);
+		}
 	}
 }
