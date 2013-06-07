@@ -16,11 +16,11 @@ import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 
 public class main {
 	static public void main(String[] args) throws IOException, ParseException, InvalidTokenOffsetsException{
-		String indexPath = "testingIndexPath";
-		String docFolder = "htmlsToWorkFrom";
+		String indexPath = "indexPath";
+		String docFolder = "documents";
 		
 		//1. Creating index 
-		//Indexer.index(docFolder, indexPath);
+		Indexer.index(docFolder, indexPath);
 		
 		//2. Loading and prepping the index to get data from.
 		Directory indexDir = FSDirectory.open(new File(indexPath));
@@ -29,7 +29,7 @@ public class main {
 		IndexSearcher indexSearcher = new IndexSearcher(reader);
 		
 		//3. Searching for query.
-		String queryString = "sean cheng education";
+		String queryString = "sean cheng";
 				
 		//4. Grab results and display them
 		ScoreDoc[] docResults = Searcher.doSearch(indexPath, queryString).scoreDocs;

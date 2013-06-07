@@ -28,29 +28,10 @@ import org.apache.lucene.util.Version;
 
 public class Searcher {
 	public static TopDocs doSearch (String indexPath, String queryString) throws ParseException, IOException {
-		/*
-		IndexReader indexReader = DirectoryReader.open(FSDirectory.open(new File(indexPath)) );
-		IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-		BooleanQuery booleanQuery = new BooleanQuery();
-		// TODO pre-processing the query a little bit..		
-		Query query1 = new TermQuery(new Term("title",queryString));
-		Query query2 = new TermQuery(new Term("content",queryString));
-		System.out.println(query1.toString());
-		System.out.println(query2.toString());
-		booleanQuery.add(query1, BooleanClause.Occur.SHOULD);
-		booleanQuery.add(query2, BooleanClause.Occur.SHOULD);
-		System.out.println(booleanQuery.toString());
-		TopDocs results = indexSearcher.search(booleanQuery, 50);
-		// TODO here you can get the information you "stored" in inverted index
-		// you need to get the whole document and generate snippets for UI ..
-		indexReader.close();
-		return results;*/
-		
-		
 		//Multi Field Querying - MultiFieldQueryParser
 		IndexReader indexReader = DirectoryReader.open(FSDirectory.open(new File(indexPath)) );
 		IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-		MultiFieldQueryParser queryparse = new MultiFieldQueryParser(Version.LUCENE_43, new String[]{"content","title"}, new StandardAnalyzer(Version.LUCENE_43));
+		MultiFieldQueryParser queryparse = new MultiFieldQueryParser(Version.LUCENE_43, new String[]{"title","header","content"}, new StandardAnalyzer(Version.LUCENE_43));
 		// TODO pre-processing the query a little bit..		
 		Query query = queryparse.parse(queryString.trim());
 		System.out.println(query.toString());
@@ -59,28 +40,12 @@ public class Searcher {
 		// you need to get the whole document and generate snippets for UI ..
 		indexReader.close();
 		return results;
-		
-		
-		
-		/*Single Field Querying
-		IndexReader indexReader = DirectoryReader.open(FSDirectory.open(new File(indexPath)) );
-		IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-		QueryParser queryparse = new QueryParser(Version.LUCENE_43, "content", new StandardAnalyzer(Version.LUCENE_43));
-		// TODO pre-processing the query a little bit..		
-		Query query = queryparse.parse(queryString.trim());
-		System.out.println(query.toString());
-		TopDocs results = indexSearcher.search(query, 50);
-		// TODO here you can get the information you "stored" in inverted index
-		// you need to get the whole document and generate snippets for UI ..
-		indexReader.close();
-		return results;
-		*/
 	}
 	
 	public static String[] getFragments(String queryString, String fieldName, String fieldContents,
 									int fragNum, int fragSize) throws IOException, InvalidTokenOffsetsException, ParseException{
 		StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_43);
-		MultiFieldQueryParser queryparse = new MultiFieldQueryParser(Version.LUCENE_43, new String[]{"content","title"}, analyzer);
+		MultiFieldQueryParser queryparse = new MultiFieldQueryParser(Version.LUCENE_43, new String[]{"title","header","content"}, analyzer);
 		Query query = queryparse.parse(queryString.trim());
 		QueryScorer scorer = new QueryScorer(query, fieldName, fieldContents);
 		Fragmenter fragmenter = new SimpleSpanFragmenter(scorer, fragSize);
