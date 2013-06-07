@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.jsoup.*;
+import org.jsoup.nodes.*;
+import org.jsoup.select.*;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -86,21 +88,21 @@ public class Indexer {
 	//public static Document get Document(File f) throws java.io.FileNotFoundException
 	//
 	//Creates and return a Lucene Document containing 
-	public static Document getDocument(File f) throws java.io.FileNotFoundException {
-		Document doc = new Document(); //NOTE: Document is from the Lucene library, whereas the 'Document' below is from Jsoup.
+	public static Document getDocument(File f) throws java.io.FileNotFoundException, IOException {
+		Document doc = new Document();
 		String content = "";
+		String title = "";
 		
 		// TODO read content from File f. -DONE
-		org.jsoup.nodes.Document htmlDoc = null;
-		try{
-			htmlDoc = Jsoup.parse(f, "ISO-8859-1");
-		}
-		catch(Exception e){
-			System.err.println("Error in getDocument(): " + e.getMessage());
-		}
+		org.jsoup.nodes.Document htmlDoc = Jsoup.parse(f, "ISO-8859-1");
+
 		
 		// TODO get text part of the HTML file -DONE
 		content = htmlDoc.text();
+		Elements check = htmlDoc.select("title");
+		if( check.size() > 0 ){
+			title = htmlDoc.select("title").first().text();
+		}
 		
 		//Converting the html files' name back to normal URLs.
 		String fixedName = f.getName().replaceAll(",", "/");
@@ -110,14 +112,13 @@ public class Indexer {
 		System.out.println(fixedName);
 		
 		doc.add(new StringField("docid", fixedName, Field.Store.YES) );
+		doc.add(new TextField("title", title, Field.Store.YES) );
 		
 		//Store.YES will store the text content of the whole web page.
 		//For now, we'll leave it at YES for debugging purposes.
 		//TODO: change to Store.NO when implementation is ready.
-		doc.add(new TextField("content", content, Field.Store.YES) );
+		doc.add(new TextField("content", content, Field.Store.NO) );
 		
-		
-		// TODO need to error check to see if we get the Lucene document we want.
 		
 		
 		
